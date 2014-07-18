@@ -18,8 +18,7 @@ get(Key) -> gen_server:call(?MODULE, {get, Key}).
 
 %%%_* Gen server callbacks =============================================
 init([]) ->
-  File = filename:join([code:priv_dir(btc), "config.txt"]),
-  Data = file:read_file(File),
+  Data = file:read_file(application:get_env(config_file)),
   {ok, Scanned, _} = erl_scan:string(Data),
   {ok, Parsed} = erl_parse:parse_exprs(Scanned),
   {value, Result, _} = erl_eval:exprs(Parsed, []),
