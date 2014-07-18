@@ -1,0 +1,10 @@
+{application, uniqueid,
+ [
+  {description, "Configuration Server"},
+  {vsn, "1.0.0"},
+  {modules, []},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {mod, {config_app, []}},
+  {env, []}
+ ]}.
