@@ -16,4 +16,4 @@ dictionary. Expressions are evaluated at load time. Example:
       timeout               => Timeout,
      }.
 
-Fuse-LB: Copyright (c) 2015 Ulf Leopold.
+Config: Copyright (c) 2015 Ulf Leopold.
