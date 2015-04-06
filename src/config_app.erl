@@ -1,3 +1,4 @@
+%% Copyright (c) 2015 Ulf Leopold.
 -module(config_app).
 -behaviour(application).
 
