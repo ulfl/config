@@ -4,6 +4,7 @@
 
 -export([start_link/0]).
 -export([get/1]).
+-export([set/2]).
 
 -export([init/1]).
 -export([handle_call/3]).
@@ -16,6 +17,8 @@
 start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 get(Key) -> gen_server:call(?MODULE, {get, Key}).
+
+set(Key, Val) -> gen_server:call(?MODULE, {set, Key, Val}).
 
 %%%_* Gen server callbacks =============================================
 init([]) ->
@@ -31,7 +34,9 @@ handle_call({get, Key}, _From, #{config := ConfigMap} = S) ->
         true  -> {ok,  maps:get(Key, ConfigMap)};
         false -> error
       end,
-  {reply, R, S}.
+  {reply, R, S};
+handle_call({set, Key, Val}, _From, #{config := ConfigMap}) ->
+  {reply, ok, #{config => maps:put(Key, Val, ConfigMap)}}.
 
 handle_cast(Msg, State) -> {stop, {unexpected_cast, Msg}, State}.
 
