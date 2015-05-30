@@ -4,6 +4,7 @@
 
 -export([start_link/0]).
 -export([get/1]).
+-export([get_nested/1]).
 -export([set/2]).
 
 -export([init/1]).
@@ -18,6 +19,8 @@ start_link() -> gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 get(Key) -> gen_server:call(?MODULE, {get, Key}).
 
+get_nested(Keys) -> gen_server:call(?MODULE, {get_nested, Keys}).
+
 set(Key, Val) -> gen_server:call(?MODULE, {set, Key, Val}).
 
 %%%_* Gen server callbacks =============================================
@@ -30,10 +33,10 @@ init([]) ->
   {ok, #{config => Result}}.
 
 handle_call({get, Key}, _From, #{config := ConfigMap} = S) ->
-  R = case maps:is_key(Key, ConfigMap) of
-        true  -> {ok,  maps:get(Key, ConfigMap)};
-        false -> error
-      end,
+  R = get_nested([Key], ConfigMap),
+  {reply, R, S};
+handle_call({get_nested, Keys}, _From, #{config := ConfigMap} = S) ->
+  R = get_nested(Keys, ConfigMap),
   {reply, R, S};
 handle_call({set, Key, Val}, _From, #{config := ConfigMap}) ->
   {reply, ok, #{config => maps:put(Key, Val, ConfigMap)}}.
@@ -45,3 +48,12 @@ handle_info(Msg, State) -> {stop, {unexpected_info, Msg}, State}.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
 terminate(_Reason, _State) -> ok.
+
+%%%_* Helpers ==========================================================
+get_nested([], _Map)     -> error;
+get_nested([H | T], Map) ->
+  case {maps:is_key(H, Map), T} of
+    {true, []} -> {ok,  maps:get(H, Map)};
+    {true, _}  -> get_nested(T, maps:get(H, Map));
+    {false, _} -> error
+  end.
