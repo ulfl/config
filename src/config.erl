@@ -6,6 +6,7 @@
 -export([get/1]).
 -export([get_nested/1]).
 -export([set/2]).
+-export([set_nested/2]).
 
 -export([init/1]).
 -export([handle_call/3]).
@@ -23,6 +24,8 @@ get_nested(Keys) -> gen_server:call(?MODULE, {get_nested, Keys}).
 
 set(Key, Val) -> gen_server:call(?MODULE, {set, Key, Val}).
 
+set_nested(Keys, Val) -> gen_server:call(?MODULE, {set_nested, Keys, Val}).
+
 %%%_* Gen server callbacks =============================================
 init([]) ->
   {ok, Path} = application:get_env(config_file),
@@ -39,7 +42,10 @@ handle_call({get_nested, Keys}, _From, #{config := ConfigMap} = S) ->
   R = get_nested(Keys, ConfigMap),
   {reply, R, S};
 handle_call({set, Key, Val}, _From, #{config := ConfigMap}) ->
-  {reply, ok, #{config => maps:put(Key, Val, ConfigMap)}}.
+  {reply, ok, #{config => maps:put(Key, Val, ConfigMap)}};
+handle_call({set_nested, Keys, Val}, _From, #{config := ConfigMap}) ->
+  R = set_nested(Keys, Val, ConfigMap),
+  {reply, ok, #{config => R}}.
 
 handle_cast(Msg, State) -> {stop, {unexpected_cast, Msg}, State}.
 
@@ -56,4 +62,12 @@ get_nested([H | T], Map) ->
     {true, []} -> {ok,  maps:get(H, Map)};
     {true, _}  -> get_nested(T, maps:get(H, Map));
     {false, _} -> error
+  end.
+
+set_nested([], Val, _Map)     -> error;
+set_nested([H | T], Val, Map) ->
+  case {maps:is_key(H, Map), T} of
+    {true, []} -> maps:put(H, Val, Map);
+    {true, _}  -> maps:put(H, set_nested(T, Val, maps:get(H, Map)), Map);
+    {false, _} -> error({key_not_found, H})
   end.
